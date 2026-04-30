@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latihan Bahasa Melayu Tahun 3</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Fredoka', sans-serif; background-color: #f0fdf4; }
+        .fade-in { animation: fadeIn 0.4s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card-hover:hover { transform: translateY(-4px); }
+        .active-word { animation: pulseGlow 1.5s infinite; }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); } 70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+    </style>
+</head>
+<body class="bg-emerald-50 text-gray-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- IKON SVG ---
+        const IconCheck = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>;
+        const IconArrowRight = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>;
+        const IconRotateCcw = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12" /><path d="M3 3v9h9" /></svg>;
+        const IconArrowLeft = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>;
+        const IconBookOpen = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+        const IconVideo = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>;
+        const IconTrophy = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
+        const IconFileQuestion = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M10 10.3c.2-.4.5-.8.9-1a2.1 2.1 0 0 1 2.6.4c.3.4.5.8.5 1.3 0 1.3-2 2-2 2"/><path d="M12 17h.01"/></svg>;
+        const IconBookDashed = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 22h-2"/><path d="M20 15v2h-2"/><path d="M4 19.5V15"/><path d="M20 8v3"/><path d="M18 2h2v4"/><path d="M4 11V7"/><path d="M4 3.5V2a2 2 0 0 1 2-2h2"/><path d="M8 0h3"/><path d="M15 0h2a2 2 0 0 1 2 2"/><path d="M4 22c1.1 0 2-.9 2-2h4a2 2 0 0 1 2-2"/><path d="M16 18h2a2 2 0 0 1 2 2"/><path d="M4 11v-1"/></svg>;
+        const IconSkip = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>;
+        const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
+        const IconGrid = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>;
+        const IconList = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
+        const IconHandMetal = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 12.5V10a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v1.4"/><path d="M14 11V9a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V5a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a2 2 0 0 0 2-2 2 2 0 0 0 2-2 2 2 0 0 0 2-2v-4.5a2 2 0 0 0-2-2h0a2 2 0 0 0-2 2v0"/></svg>;
+        const IconType = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>;
+        const IconPen = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>;
+        const IconColumns = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>;
+        const IconMessage = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+
+        // --- DATA UNIT 1 ---
+        const unit1Data = [
+            { id: 1, text: "Datuk mengajar Syafik memancing ikan.", imageUrl: "1.jpg", signVideoUrl: "video1.mp4", signDesc: "Isyarat: 'Datuk' + 'Ajar' + 'Syafik' + 'Pancing' + 'Ikan'" },
+            { id: 2, text: "Nenek menyuap adik bubur nasi.", imageUrl: "2.jpg", signVideoUrl: "video2.mp4", signDesc: "Isyarat: 'Nenek' + 'Suap' + 'Adik' + 'Bubur' + 'Nasi'" },
+            { id: 3, text: "Kakak Syafik sedang mengelap pinggan.", imageUrl: "3.jpg", signVideoUrl: "video3.mp4", signDesc: "Isyarat: 'Kakak' + 'Syafik' + 'Sedang' + 'Lap' + 'Pinggan'" },
+            { id: 4, text: "Ibu menolong kakak menghidangkan makanan.", imageUrl: "4.jpg", signVideoUrl: "video4.mp4", signDesc: "Isyarat: 'Ibu' + 'Tolong' + 'Kakak' + 'Hidang' + 'Makan'" },
+            { id: 5, text: "Abang sedang bermain-main air di tepi sungai.", imageUrl: "5.jpg", signVideoUrl: "video5.mp4", signDesc: "Isyarat: 'Abang' + 'Main' + 'Air' + 'Tepi' + 'Sungai'" }
+        ];
+
+        // --- DATA UNIT 2 ---
+        const unit2Data = {
+            page1: [
+                { id: 1, text: "Mak Cik Ina menghidangkan sepiring kuih popia dan sepiring kuih seri muka.", correctImage: "image_fc93da.png" },
+                { id: 2, text: "Mak Cik Ina membasuh pinggan sambil berbual-bual dengan ibunya.", correctImage: "image_fc96c4.png" },
+                { id: 3, text: "“Mak Cik Ina, semua kerepek pisang itu Mak Cik Ina buat semalam atau hari ini?”", correctImage: "image_fc96e2.png" },
+                { id: 4, text: "Mak Cik Ina membawa sangkar Si Tompok lalu mencucinya.", correctImage: "image_fc96fe.png" },
+                { id: 5, text: "Mak Cik Ina membeli ikan, udang dan sayur di pasar.", correctImage: "image_fca262.jpg" },
+                { id: 6, text: "Mak Cik Ina memanggang ayam dan memasak kari.", correctImage: "image_fca285.jpg" },
+                { id: 7, text: "Ahli keluarga membantu Mak Cik Ina mengemas dapur.", correctImage: "image_fca2a5.jpg" }
+            ],
+            page2: [
+                { id: 1, signImg: "image_fd07c1.png", actionImg: "image_fd07f8.png", answer: "Mencuci", options: ["Mencuci", "Memasak", "Menyapu"] },
+                { id: 2, signImg: "image_fd0f24.png", actionImg: "image_fd0b7d.png", answer: "Menyiram", options: ["Menyiram", "Menulis", "Membaca"] },
+                { id: 3, signImg: "image_fd0f80.png", actionImg: "image_fd0f60.jpg", answer: "Berkebun", options: ["Berkebun", "Bermain", "Berlari"] }
+            ],
+            page3: [
+                { id: 1, word: "Mencuci", correctSign: "image_fd07c1.png", options: ["image_fd07c1.png", "image_fd0f24.png", "image_fd0f80.png"] },
+                { id: 2, word: "Menyiram", correctSign: "image_fd0f24.png", options: ["image_fd0f24.png", "image_fc96fe.png", "image_fd07c1.png"] },
+                { id: 3, word: "Berkebun", correctSign: "image_fd0f80.png", options: ["image_fd0f80.png", "image_fd07c1.png", "image_fd0f24.png"] }
+            ]
+        };
+        const allUnit2Page1Images = unit2Data.page1.map(i => i.correctImage);
+
+        // --- DATA UNIT 3 ---
+        const unit3Data = {
+            page1: [
+                { id: 1, word: "SAYA", correctSign: "u3_sign_saya.png" },
+                { id: 2, word: "INI", correctSign: "u3_sign_ini.png" },
+                { id: 3, word: "ITU", correctSign: "u3_sign_itu.png" },
+                { id: 4, word: "MEREKA", correctSign: "u3_sign_mereka.png" },
+                { id: 5, word: "SANA", correctSign: "u3_sign_sana.png" }
+            ],
+            page2: [
+                { id: 1, word: "SAYA", category: "diri" },
+                { id: 2, word: "INI", category: "tunjuk" },
+                { id: 3, word: "KAMI", category: "diri" },
+                { id: 4, word: "ITU", category: "tunjuk" },
+                { id: 5, word: "MEREKA", category: "diri" },
+                { id: 6, word: "SANA", category: "tunjuk" },
+                { id: 7, word: "AWAK", category: "diri" },
+                { id: 8, word: "SINI", category: "tunjuk" }
+            ],
+            page3: [
+                { id: 1, sentence: "_____ suka makan buah tembikai.", answer: "Saya", options: ["Saya", "Ini", "Itu"] },
+                { id: 2, sentence: "Buku cerita _____ sangat tebal.", answer: "itu", options: ["itu", "dia", "kami"] },
+                { id: 3, sentence: "“Boleh _____ pinjam pensel awak?” tanya Ali.", answer: "saya", options: ["saya", "mereka", "ini"] },
+                { id: 4, sentence: "Basikal baru ini milik _____.", answer: "dia", options: ["dia", "sana", "itu"] },
+                { id: 5, sentence: "Kucing comel itu tidur di _____.", answer: "sana", options: ["sana", "saya", "kami"] }
+            ],
+            page4: [
+                { id: 1, word: "SAYA", signImg: "u3_sign_saya.png" },
+                { id: 2, word: "INI", signImg: "u3_sign_ini.png" },
+                { id: 3, word: "KAMI", signImg: "u3_sign_kami.png" },
+                { id: 4, word: "SANA", signImg: "u3_sign_sana.png" },
+                { id: 5, word: "MEREKA", signImg: "u3_sign_mereka.png" }
+            ]
+        };
+        const allUnit3Page1Signs = unit3Data.page1.map(i => i.correctSign);
+
+
+        // --- APP COMPONENT ---
+        function App() {
+            const [currentView, setCurrentView] = useState('home'); 
+            const [u1GameState, setU1GameState] = useState('menu'); 
+            const [u1Section, setU1Section] = useState(1);
+            const [u2ActivePage, setU2ActivePage] = useState('menu');
+            const [u3ActivePage, setU3ActivePage] = useState('menu');
+            const [score, setScore] = useState(0);
+
+            // States Game Generic
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [feedback, setFeedback] = useState(null); 
+            
+            // State Unit 1 & Unit 3 P4 (Susun Huruf/Perkataan)
+            const [scrambledItems, setScrambledItems] = useState([]);
+            const [selectedItems, setSelectedItems] = useState([]);
+
+            // State Option Lists
+            const [dynamicOptions, setDynamicOptions] = useState([]);
+
+            // State Khusus Unit 3 Page 2 (Kategori)
+            const [u3P2Words, setU3P2Words] = useState([]);
+            const [u3P2Diri, setU3P2Diri] = useState([]);
+            const [u3P2Tunjuk, setU3P2Tunjuk] = useState([]);
+            const [u3P2ActiveWord, setU3P2ActiveWord] = useState(null);
+
+            // Helper: Shuffle
+            const shuffleArray = (array) => {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            };
+
+            // --- NAVIGATION ---
+            const goHome = () => {
+                setCurrentView('home');
+                setU1GameState('menu');
+                setU2ActivePage('menu');
+                setU3ActivePage('menu');
+                resetGame();
+            };
+
+            const resetGame = () => {
+                setScore(0);
+                setCurrentIndex(0);
+                setFeedback(null);
+                setSelectedItems([]);
+                setScrambledItems([]);
+                setDynamicOptions([]);
+            };
+
+            // --- LOGIC UNIT 1 ---
+            const startUnit1Game = (section) => {
+                setU1Section(section);
+                setU1GameState('playing');
+                resetGame();
+                loadU1Question(0);
+            };
+
+            const loadU1Question = (index) => {
+                const sentence = unit1Data[index].text;
+                const words = sentence.split(' ');
+                setScrambledItems(shuffleArray(words.map((w, i) => ({ id: i, text: w }))));
+                setSelectedItems([]);
+                setFeedback(null);
+            };
+
+            const checkU1Answer = () => {
+                const current = unit1Data[currentIndex];
+                const formed = selectedItems.map(w => w.text).join(' ');
+                if (formed === current.text) {
+                    setFeedback('correct');
+                    setScore(s => s + 1);
+                } else {
+                    setFeedback('wrong');
+                }
+            };
+
+            // --- LOGIC UNIT 2 ---
+            const startUnit2 = (page) => {
+                setCurrentView('unit2');
+                setU2ActivePage(page);
+                resetGame();
+                if (page === 'page1') loadU2P1Question(0);
+            };
+
+            const loadU2P1Question = (index) => {
+                const correctImg = unit2Data.page1[index].correctImage;
+                let others = allUnit2Page1Images.filter(img => img !== correctImg);
+                let distractors = shuffleArray(others).slice(0, 3);
+                setDynamicOptions(shuffleArray([correctImg, ...distractors]));
+                setFeedback(null);
+            };
+
+            const checkU2P1Answer = (selectedImg) => {
+                if (feedback) return;
+                if (selectedImg === unit2Data.page1[currentIndex].correctImage) {
+                    setFeedback('correct'); setScore(s => s + 1);
+                } else setFeedback('wrong');
+            };
+
+            const checkU2P2Answer = (selectedOption) => {
+                if (feedback) return;
+                if (selectedOption === unit2Data.page2[currentIndex].answer) {
+                    setFeedback('correct'); setScore(s => s + 1);
+                } else setFeedback('wrong');
+            };
+
+            const checkU2P3Answer = (selectedImg) => {
+                if (feedback) return;
+                if (selectedImg === unit2Data.page3[currentIndex].correctSign) {
+                    setFeedback('correct'); setScore(s => s + 1);
+                } else setFeedback('wrong');
+            };
+
+            // --- LOGIC UNIT 3 ---
+            const startUnit3 = (page) => {
+                setCurrentView('unit3');
+                setU3ActivePage(page);
+                resetGame();
+                
+                if (page === 'page1') loadU3P1Question(0);
+                if (page === 'page2') loadU3P2Game();
+                if (page === 'page4') loadU3P4Question(0);
+            };
+
+            // Unit 3 Page 1: Padan Kata dengan Isyarat
+            const loadU3P1Question = (index) => {
+                const correctSign = unit3Data.page1[index].correctSign;
+                let others = allUnit3Page1Signs.filter(img => img !== correctSign);
+                let distractors = shuffleArray(others).slice(0, 2);
+                setDynamicOptions(shuffleArray([correctSign, ...distractors]));
+                setFeedback(null);
+            };
+
+            const checkU3P1Answer = (selectedImg) => {
+                if (feedback) return;
+                if (selectedImg === unit3Data.page1[currentIndex].correctSign) {
+                    setFeedback('correct'); setScore(s => s + 1);
+                } else setFeedback('wrong');
+            };
+
+            // Unit 3 Page 2: Kategorikan (Diri & Tunjuk)
+            const loadU3P2Game = () => {
+                setU3P2Words(shuffleArray([...unit3Data.page2]));
+                setU3P2Diri([]);
+                setU3P2Tunjuk([]);
+                setU3P2ActiveWord(null);
+                setFeedback(null);
+            };
+
+            const handleU3P2Drop = (targetCategory) => {
+                if (!u3P2ActiveWord || feedback === 'finished') return;
+
+                // Validate if correct
+                if (u3P2ActiveWord.category === targetCategory) {
+                    if (targetCategory === 'diri') setU3P2Diri([...u3P2Diri, u3P2ActiveWord]);
+                    else setU3P2Tunjuk([...u3P2Tunjuk, u3P2ActiveWord]);
+
+                    const remainingWords = u3P2Words.filter(w => w.id !== u3P2ActiveWord.id);
+                    setU3P2Words(remainingWords);
+                    setU3P2ActiveWord(null);
+                    setScore(s => s + 1);
+
+                    if (remainingWords.length === 0) setFeedback('finished');
+                } else {
+                    setFeedback('wrong');
+                    setTimeout(() => setFeedback(null), 1500);
+                }
+            };
+
+            // Unit 3 Page 3: Isi Tempat Kosong
+            const checkU3P3Answer = (selectedOption) => {
+                if (feedback) return;
+                if (selectedOption === unit3Data.page3[currentIndex].answer) {
+                    setFeedback('correct'); setScore(s => s + 1);
+                } else setFeedback('wrong');
+            };
+
+            // Unit 3 Page 4: Ejaan
+            const loadU3P4Question = (index) => {
+                const word = unit3Data.page4[index].word;
+                const letters = word.split('').map((char, i) => ({ id: i, text: char }));
+                setScrambledItems(shuffleArray(letters));
+                setSelectedItems(Array(word.length).fill(null));
+                setFeedback(null);
+            };
+
+            const handleU3P4LetterSelect = (letterObj) => {
+                if (feedback === 'correct') return;
+                const emptyIdx = selectedItems.indexOf(null);
+                if (emptyIdx !== -1) {
+                    const newArr = [...selectedItems];
+                    newArr[emptyIdx] = letterObj;
+                    setSelectedItems(newArr);
+                    setScrambledItems(scrambledItems.filter(l => l.id !== letterObj.id));
+                    setFeedback(null);
+                }
+            };
+
+            const handleU3P4LetterDeselect = (letterObj, idx) => {
+                if (feedback === 'correct' || !letterObj) return;
+                const newArr = [...selectedItems];
+                newArr[idx] = null;
+                setSelectedItems(newArr);
+                setScrambledItems([...scrambledItems, letterObj]);
+                setFeedback(null);
+            };
+
+            const checkU3P4Answer = () => {
+                const currentWord = unit3Data.page4[currentIndex].word;
+                const formed = selectedItems.map(l => l ? l.text : '').join('');
+                if (formed === currentWord) {
+                    setFeedback('correct'); setScore(s => s + 1);
+                } else setFeedback('wrong');
+            };
+
+            // Generic Next Question Handler
+            const nextQuestion = (dataSet) => {
+                if (currentIndex < dataSet.length - 1) {
+                    const nextIdx = currentIndex + 1;
+                    setCurrentIndex(nextIdx);
+                    setFeedback(null);
+                    
+                    if (currentView === 'unit1') loadU1Question(nextIdx);
+                    if (currentView === 'unit2' && u2ActivePage === 'page1') loadU2P1Question(nextIdx);
+                    if (currentView === 'unit3' && u3ActivePage === 'page1') loadU3P1Question(nextIdx);
+                    if (currentView === 'unit3' && u3ActivePage === 'page4') loadU3P4Question(nextIdx);
+                } else {
+                    setFeedback('finished');
+                }
+            };
+
+            // --- RENDERS ---
+
+            const RenderHome = () => {
+                const units = Array.from({ length: 15 }, (_, i) => i + 1);
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-6 fade-in bg-emerald-50">
+                        <div className="bg-white p-10 rounded-3xl shadow-2xl max-w-5xl w-full text-center border-t-8 border-emerald-600">
+                            <h1 className="text-4xl font-extrabold text-emerald-900 mb-2 tracking-tight">Latihan Bahasa Melayu</h1>
+                            <span className="bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-sm font-bold">Tahun 3</span>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mt-10">
+                                {units.map((unit) => {
+                                    const isActive = unit <= 3;
+                                    let icon = <IconBookDashed />;
+                                    let titleStr = "Akan Datang";
+                                    let colorCls = "bg-gray-50 border-gray-200 text-gray-400";
+                                    let iconBg = "bg-gray-400";
+
+                                    if(unit === 1) { icon = <IconFileQuestion/>; titleStr = "Susun Ayat"; colorCls = "bg-blue-50 border-blue-200 hover:border-blue-400 text-blue-900"; iconBg="bg-blue-500"; }
+                                    if(unit === 2) { icon = <IconBookOpen/>; titleStr = "Kemahiran Membaca"; colorCls = "bg-purple-50 border-purple-200 hover:border-purple-400 text-purple-900"; iconBg="bg-purple-500"; }
+                                    if(unit === 3) { icon = <IconList/>; titleStr = "Kata Ganti Nama"; colorCls = "bg-orange-50 border-orange-200 hover:border-orange-400 text-orange-900"; iconBg="bg-orange-500"; }
+
+                                    return (
+                                        <button key={unit}
+                                            onClick={() => {
+                                                if(unit === 1) { setCurrentView('unit1'); setU1GameState('menu'); }
+                                                else if(unit === 2) { setCurrentView('unit2'); setU2ActivePage('menu'); }
+                                                else if(unit === 3) { setCurrentView('unit3'); setU3ActivePage('menu'); }
+                                                else setCurrentView(`placeholder_${unit}`);
+                                            }}
+                                            className={`flex flex-col items-center p-5 border-2 rounded-2xl transition-all transform ${isActive ? 'hover:-translate-y-1 hover:shadow-lg cursor-pointer' : 'cursor-not-allowed opacity-70'} ${colorCls}`}
+                                        >
+                                            <div className={`${iconBg} text-white p-3 rounded-full mb-3 shadow-md`}>{icon}</div>
+                                            <h2 className="text-sm font-extrabold">Unit {unit}</h2>
+                                            <p className="text-xs mt-1 font-medium opacity-80">{titleStr}</p>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            // Unit 1 Menu
+            const RenderUnit1Menu = () => (
+                <div className="flex flex-col items-center justify-center min-h-screen p-4 fade-in bg-blue-50">
+                    <button onClick={goHome} className="absolute top-6 left-6 flex items-center gap-2 text-blue-700 font-bold bg-white px-4 py-2 rounded-full shadow-sm hover:bg-blue-100">
+                        <IconArrowLeft /> Laman Utama
+                    </button>
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border-t-4 border-blue-500">
+                        <h1 className="text-3xl font-bold text-blue-900 mb-2">Unit 1: Susun Ayat</h1>
+                        <p className="text-gray-500 mb-8">Pilih mod latihan di bawah</p>
+                        <div className="space-y-4">
+                            <button onClick={() => startUnit1Game(1)} className="w-full flex items-center justify-between p-4 bg-white border-2 border-blue-200 rounded-xl hover:bg-blue-50 transition-all group">
+                                <div className="flex items-center gap-3"><div className="bg-blue-100 p-2 rounded-lg text-blue-600"><IconBookOpen /></div><div className="text-left"><h3 className="font-bold text-gray-800">Bahagian 1: Gambar</h3><p className="text-sm text-gray-500">Bina ayat berpandukan gambar.</p></div></div><IconArrowRight className="text-blue-400" />
+                            </button>
+                            <button onClick={() => startUnit1Game(2)} className="w-full flex items-center justify-between p-4 bg-white border-2 border-indigo-200 rounded-xl hover:bg-indigo-50 transition-all group">
+                                <div className="flex items-center gap-3"><div className="bg-indigo-100 p-2 rounded-lg text-indigo-600"><IconVideo /></div><div className="text-left"><h3 className="font-bold text-gray-800">Bahagian 2: Isyarat</h3><p className="text-sm text-gray-500">Bina ayat berpandukan video.</p></div></div><IconArrowRight className="text-indigo-400" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // Unit 1 Game
+            const RenderUnit1Game = () => {
+                const currentQ = unit1Data[currentIndex];
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 fade-in bg-blue-50">
+                        <div className="w-full max-w-3xl flex justify-between items-center mb-4">
+                            <button onClick={() => setU1GameState('menu')} className="text-gray-600 flex items-center gap-2 font-bold bg-white px-4 py-2 rounded-full shadow-sm"><IconArrowLeft /> Menu</button>
+                            <span className="bg-white px-4 py-2 rounded-full shadow text-blue-600 font-bold">U1 Soalan {currentIndex + 1}/{unit1Data.length}</span>
+                            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full shadow font-bold">Markah: {score}</span>
+                        </div>
+                        
+                        <div className="w-full max-w-3xl bg-white rounded-3xl shadow-lg overflow-hidden mb-6 border-4 border-blue-100">
+                            <div className={`h-80 w-full flex flex-col items-center justify-center p-4 text-center bg-gray-50`}>
+                                {u1Section === 1 ? (
+                                    <img src={currentQ.imageUrl} className="max-h-72 max-w-full object-contain rounded-xl shadow-sm" onError={(e) => e.target.style.display='none'} />
+                                ) : (
+                                    <video key={currentQ.id} controls autoPlay muted playsInline className="max-h-72 w-full rounded-xl shadow-sm bg-black" onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.innerHTML += `<div class="text-red-500 bg-red-50 p-4 rounded-lg text-sm">Video tidak dijumpai: ${currentQ.signVideoUrl}</div>`; }}>
+                                        <source src={currentQ.signVideoUrl} type="video/mp4" />
+                                    </video>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className={`w-full max-w-3xl min-h-[80px] bg-white border-4 rounded-2xl p-5 flex flex-wrap gap-3 items-center mb-6 transition-colors shadow-inner ${feedback === 'correct' ? 'border-green-400 bg-green-50' : feedback === 'wrong' ? 'border-red-400 bg-red-50' : 'border-blue-200'}`}>
+                            {selectedItems.length === 0 && <span className="text-gray-400 italic font-medium">Klik perkataan di bawah untuk menyusun ayat...</span>}
+                            {selectedItems.map(w => (
+                                <button key={w.id} onClick={() => { if(feedback!=='correct') { setSelectedItems(selectedItems.filter(x => x.id !== w.id)); setScrambledItems([...scrambledItems, w]); setFeedback(null); } }} className="bg-blue-500 hover:bg-red-400 text-white px-4 py-2 rounded-lg shadow font-bold transition-colors">{w.text}</button>
+                            ))}
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-3 mb-8 max-w-3xl">
+                            {scrambledItems.map(w => (
+                                <button key={w.id} onClick={() => { if(feedback!=='correct') { setSelectedItems([...selectedItems, w]); setScrambledItems(scrambledItems.filter(x => x.id !== w.id)); setFeedback(null); } }} className="bg-white border-2 border-blue-200 text-gray-700 px-5 py-3 rounded-xl shadow-md hover:border-blue-500 hover:text-blue-600 transition-all font-bold text-lg">{w.text}</button>
+                            ))}
+                        </div>
+
+                        <div className="flex flex-col items-center gap-4">
+                            {feedback === 'wrong' && <p className="text-red-500 font-bold animate-pulse text-lg">Ayat kurang tepat. Sila klik Jawab Semula atau ubah susunan.</p>}
+                            <div className="flex gap-4">
+                                {feedback === 'correct' ? (
+                                    <button onClick={() => nextQuestion(unit1Data)} className="bg-green-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-green-600 flex items-center gap-2 animate-bounce">Seterusnya <IconArrowRight /></button>
+                                ) : (
+                                    <>
+                                        <button onClick={() => loadU1Question(currentIndex)} className="bg-gray-200 text-gray-700 px-5 py-3 rounded-full font-bold hover:bg-gray-300 shadow flex items-center gap-2"><IconRotateCcw /> Jawab Semula</button>
+                                        <button onClick={() => nextQuestion(unit1Data)} className="px-6 py-3 bg-yellow-100 text-yellow-700 rounded-full font-bold hover:bg-yellow-200 transition-colors flex items-center gap-2 shadow">Langkau <IconSkip /></button>
+                                        <button onClick={checkU1Answer} disabled={selectedItems.length === 0} className="bg-blue-600 text-white px-10 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 disabled:opacity-50">Semak Jawapan</button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            // Unit 2 Menu
+            const RenderUnit2Menu = () => (
+                <div className="min-h-screen flex flex-col items-center justify-center p-6 fade-in bg-purple-50">
+                    <button onClick={goHome} className="absolute top-6 left-6 flex items-center gap-2 text-purple-700 font-bold bg-white px-4 py-2 rounded-full shadow-sm hover:bg-purple-100"><IconArrowLeft /> Menu Utama</button>
+                    <div className="bg-white p-8 rounded-3xl shadow-xl max-w-2xl w-full text-center border-t-4 border-purple-500">
+                        <h2 className="text-3xl font-bold text-purple-900 mb-8">Pilih Aktiviti Unit 2</h2>
+                        <div className="space-y-4">
+                            <button onClick={() => startUnit2('page1')} className="w-full p-4 border-2 border-purple-100 rounded-2xl hover:border-purple-300 hover:bg-purple-50 flex items-center justify-between group transition-all">
+                                <div className="flex items-center gap-4"><div className="bg-purple-100 p-3 rounded-xl text-purple-600"><IconGrid /></div><div className="text-left"><h3 className="font-bold text-gray-800">Aktiviti 1</h3><p className="text-sm text-gray-500">Padankan Ayat dengan Gambar</p></div></div><IconArrowRight className="text-purple-300 group-hover:text-purple-600" />
+                            </button>
+                            <button onClick={() => startUnit2('page2')} className="w-full p-4 border-2 border-purple-100 rounded-2xl hover:border-purple-300 hover:bg-purple-50 flex items-center justify-between group transition-all">
+                                <div className="flex items-center gap-4"><div className="bg-purple-100 p-3 rounded-xl text-purple-600"><IconList /></div><div className="text-left"><h3 className="font-bold text-gray-800">Aktiviti 2</h3><p className="text-sm text-gray-500">Pilih Kata Kerja (Isyarat & Aksi)</p></div></div><IconArrowRight className="text-purple-300 group-hover:text-purple-600" />
+                            </button>
+                            <button onClick={() => startUnit2('page3')} className="w-full p-4 border-2 border-purple-100 rounded-2xl hover:border-purple-300 hover:bg-purple-50 flex items-center justify-between group transition-all">
+                                <div className="flex items-center gap-4"><div className="bg-purple-100 p-3 rounded-xl text-purple-600"><IconHandMetal /></div><div className="text-left"><h3 className="font-bold text-gray-800">Aktiviti 3</h3><p className="text-sm text-gray-500">Padankan Kata Kerja dengan Isyarat</p></div></div><IconArrowRight className="text-purple-300 group-hover:text-purple-600" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // Unit 2 Page 1
+            const RenderU2Page1 = () => {
+                const currentQ = unit2Data.page1[currentIndex];
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 fade-in bg-purple-50">
+                        <div className="w-full max-w-4xl flex justify-between items-center mb-4"><button onClick={() => setU2ActivePage('menu')} className="text-gray-600 flex items-center gap-2 font-bold bg-white px-4 py-2 rounded-full shadow-sm"><IconArrowLeft /> Menu U2</button><span className="bg-white px-4 py-2 rounded-full shadow text-purple-600 font-bold">Aktiviti 1: {currentIndex + 1}/{unit2Data.page1.length}</span><span className="bg-green-100 text-green-700 px-4 py-2 rounded-full shadow font-bold">Markah: {score}</span></div>
+                        <div className="bg-white p-6 rounded-3xl shadow-md mb-8 w-full max-w-4xl text-center border-b-4 border-purple-300"><h2 className="text-2xl font-bold text-purple-900 leading-relaxed">"{currentQ.text}"</h2><p className="text-sm text-gray-500 mt-2 font-medium">Pilih gambar yang paling sesuai dengan ayat di atas.</p></div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+                            {dynamicOptions.map((img, idx) => (
+                                <button key={idx} disabled={!!feedback} onClick={() => checkU2P1Answer(img)} className={`relative h-56 bg-white rounded-2xl overflow-hidden border-4 transition-all card-hover shadow-md flex items-center justify-center p-2 ${feedback === 'correct' && img === currentQ.correctImage ? 'border-green-500 ring-4 ring-green-100' : feedback === 'wrong' ? 'border-transparent opacity-50' : 'border-transparent hover:border-purple-300'}`}>
+                                    <img src={img} className="h-full w-full object-contain rounded-xl" onError={(e) => e.target.src='https://placehold.co/400x300?text=Gambar+Hilang'} />
+                                    {feedback === 'correct' && img === currentQ.correctImage && <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center"><div className="bg-green-500 text-white p-3 rounded-full shadow-lg scale-150"><IconCheck /></div></div>}
+                                </button>
+                            ))}
+                        </div>
+                        {feedback === 'correct' && <button onClick={() => nextQuestion(unit2Data.page1)} className="mt-8 bg-green-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:bg-green-600 flex items-center gap-3 animate-bounce">Soalan Seterusnya <IconArrowRight /></button>}
+                        {feedback === 'wrong' && (
+                            <div className="mt-6 flex flex-col items-center gap-4 fade-in">
+                                <p className="text-red-500 font-bold bg-white px-6 py-3 rounded-full shadow-md text-lg">Salah. Sila cari gambar yang betul.</p>
+                                <button onClick={() => setFeedback(null)} className="px-8 py-3 bg-red-500 text-white rounded-full font-bold shadow-lg hover:bg-red-600 flex items-center gap-2"><IconRotateCcw /> Jawab Semula</button>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            // Unit 2 Page 2
+            const RenderU2Page2 = () => {
+                const currentQ = unit2Data.page2[currentIndex];
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 fade-in bg-purple-50">
+                        <div className="w-full max-w-4xl flex justify-between items-center mb-4"><button onClick={() => setU2ActivePage('menu')} className="text-gray-600 flex items-center gap-2 font-bold bg-white px-4 py-2 rounded-full shadow-sm"><IconArrowLeft /> Menu U2</button><span className="bg-white px-4 py-2 rounded-full shadow text-purple-600 font-bold">Aktiviti 2: {currentIndex + 1}/{unit2Data.page2.length}</span><span className="bg-green-100 text-green-700 px-4 py-2 rounded-full shadow font-bold">Markah: {score}</span></div>
+                        <div className="flex flex-col md:flex-row gap-6 mb-10 w-full max-w-4xl justify-center items-center">
+                            <div className="bg-white p-5 rounded-3xl shadow-lg flex-1 w-full flex flex-col items-center border-t-4 border-blue-300"><span className="bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4">Isyarat</span><img src={currentQ.signImg} className="h-48 object-contain" onError={(e) => e.target.src='https://placehold.co/300x200?text=Isyarat'} /></div>
+                            <div className="bg-purple-200 text-purple-800 rounded-full p-4 font-extrabold text-2xl shadow-inner">+</div>
+                            <div className="bg-white p-5 rounded-3xl shadow-lg flex-1 w-full flex flex-col items-center border-t-4 border-orange-300"><span className="bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4">Perbuatan</span><img src={currentQ.actionImg} className="h-48 object-contain" onError={(e) => e.target.src='https://placehold.co/300x200?text=Aksi'} /></div>
+                        </div>
+                        <h2 className="text-gray-700 font-extrabold mb-6 text-2xl bg-white px-8 py-3 rounded-full shadow-sm">Apakah kata kerja ini?</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl">
+                            {currentQ.options.map((opt, idx) => (
+                                <button key={idx} disabled={!!feedback} onClick={() => checkU2P2Answer(opt)} className={`p-5 rounded-2xl font-bold text-xl shadow-md transition-all ${feedback === 'correct' && opt === currentQ.answer ? 'bg-green-500 text-white scale-105' : feedback === 'wrong' && opt !== currentQ.answer ? 'bg-gray-100 text-gray-400' : 'bg-white hover:bg-purple-100 hover:border-purple-400 border-2 border-transparent text-purple-900'}`}>{opt}</button>
+                            ))}
+                        </div>
+                        {feedback === 'correct' && <div className="mt-10 flex flex-col items-center animate-bounce"><span className="text-green-600 font-bold text-2xl mb-4 flex items-center gap-2 bg-green-50 px-6 py-2 rounded-full"><IconCheck /> Tepat Sekali!</span><button onClick={() => nextQuestion(unit2Data.page2)} className="bg-purple-600 text-white px-10 py-4 rounded-full font-bold shadow-xl hover:bg-purple-700 flex items-center gap-2">Soalan Seterusnya <IconArrowRight/></button></div>}
+                        {feedback === 'wrong' && (
+                            <div className="mt-6 flex flex-col items-center gap-4 fade-in">
+                                <p className="text-red-500 font-bold bg-white px-6 py-3 rounded-full shadow-md text-lg">Salah. Sila cuba lagi.</p>
+                                <button onClick={() => setFeedback(null)} className="px-8 py-3 bg-red-500 text-white rounded-full font-bold shadow-lg hover:bg-red-600 flex items-center gap-2"><IconRotateCcw /> Jawab Semula</button>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            // Unit 2 Page 3
+            const RenderU2Page3 = () => {
+                const currentQ = unit2Data.page3[currentIndex];
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 fade-in bg-purple-50">
+                        <div className="w-full max-w-4xl flex justify-between items-center mb-4"><button onClick={() => setU2ActivePage('menu')} className="text-gray-600 flex items-center gap-2 font-bold bg-white px-4 py-2 rounded-full shadow-sm"><IconArrowLeft /> Menu U2</button><span className="bg-white px-4 py-2 rounded-full shadow text-purple-600 font-bold">Aktiviti 3: {currentIndex + 1}/{unit2Data.page3.length}</span><span className="bg-green-100 text-green-700 px-4 py-2 rounded-full shadow font-bold">Markah: {score}</span></div>
+                        <div className="bg-white px-16 py-10 rounded-[3rem] shadow-xl border-b-8 border-purple-300 mb-10 text-center transform hover:scale-105 transition-transform"><p className="text-purple-400 text-sm font-bold uppercase mb-2 tracking-widest">Kata Kerja</p><h1 className="text-6xl font-black text-purple-800 tracking-wide">{currentQ.word}</h1></div>
+                        <p className="text-gray-600 mb-6 font-bold text-lg bg-white px-6 py-2 rounded-full shadow-sm">Pilih isyarat yang betul di bawah:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+                            {currentQ.options.map((img, idx) => (
+                                <button key={idx} disabled={!!feedback} onClick={() => checkU2P3Answer(img)} className={`bg-white rounded-3xl p-6 shadow-md transition-all flex items-center justify-center h-56 border-4 ${feedback === 'correct' && img === currentQ.correctSign ? 'border-green-500 bg-green-50' : feedback === 'wrong' ? 'border-transparent opacity-40' : 'border-transparent hover:border-purple-400 card-hover'}`}>
+                                    <img src={img} className="h-full w-full object-contain" onError={(e) => e.target.src='https://placehold.co/300x300?text=Isyarat'} />
+                                    {feedback === 'correct' && img === currentQ.correctSign && <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center"><div className="bg-green-500 text-white p-2 rounded-full shadow-lg scale-150"><IconCheck /></div></div>}
+                                </button>
+                            ))}
+                        </div>
+                        {feedback === 'correct' && <button onClick={() => nextQuestion(unit2Data.page3)} className="mt-10 bg-green-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:bg-green-600 flex items-center gap-3 animate-bounce">Seterusnya <IconArrowRight /></button>}
+                        {feedback === 'wrong' && (
+                            <div className="mt-6 flex flex-col items-center gap-4 fade-in">
+                                <p className="text-red-500 font-bold bg-white px-6 py-3 rounded-full shadow-md text-lg">Salah. Sila pilih gambar yang betul.</p>
+                                <button onClick={() => setFeedback(null)} className="px-8 py-3 bg-red-500 text-white rounded-full font-bold shadow-lg hover:bg-red-600 flex items-center gap-2"><IconRotateCcw /> Jawab Semula</button>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            // --- RENDER UNIT 3 ---
+            const RenderUnit3Menu = () => (
+                <div className="min-h-screen flex flex-col items-center justify-center p-6 fade-in bg-orange-50">
+                    <button onClick={goHome} className="absolute top-6 left-6 flex items-center gap-2 text-orange-700 font-bold bg-white px-4 py-2 rounded-full shadow-sm hover:bg-orange-100">
+                        <IconArrowLeft /> Menu Utama
+                    </button>
+                    
+                    <div className="bg-white p-8 rounded-3xl shadow-xl max-w-2xl w-full text-center border-t-4 border-orange-500">
+                        <h2 className="text-3xl font-bold text-orange-900 mb-2">Unit 3: Kata Ganti Nama</h2>
+                        <p className="text-gray-500 mb-8 font-medium">Diri dan Tunjuk</p>
+                        <div className="space-y-4">
+                            <button onClick={() => startUnit3('page1')} className="w-full p-4 border-2 border-orange-100 rounded-2xl hover:border-orange-300 hover:bg-orange-50 flex items-center justify-between group transition-all">
+                                <div className="flex items-center gap-4"><div className="bg-orange-100 p-3 rounded-xl text-orange-600"><IconGrid /></div><div className="text-left"><h3 className="font-bold text-gray-800">Bahagian 1</h3><p className="text-sm text-gray-500">Padankan Perkataan & Isyarat</p></div></div><IconArrowRight className="text-orange-300 group-hover:text-orange-600" />
+                            </button>
+                            <button onClick={() => startUnit3('page2')} className="w-full p-4 border-2 border-orange-100 rounded-2xl hover:border-orange-300 hover:bg-orange-50 flex items-center justify-between group transition-all">
+                                <div className="flex items-center gap-4"><div className="bg-orange-100 p-3 rounded-xl text-orange-600"><IconColumns /></div><div className="text-left"><h3 className="font-bold text-gray-800">Bahagian 2</h3><p className="text-sm text-gray-500">Kategorikan KGN (Diri / Tunjuk)</p></div></div><IconArrowRight className="text-orange-300 group-hover:text-orange-600" />
+                            </button>
+                            <button onClick={() => startUnit3('page3')} className="w-full p-4 border-2 border-orange-100 rounded-2xl hover:border-orange-300 hover:bg-orange-50 flex items-center justify-between group transition-all">
+                                <div className="flex items-center gap-4"><div className="bg-orange-100 p-3 rounded-xl text-orange-600"><IconType /></div><div className="text-left"><h3 className="font-bold text-gray-800">Bahagian 3</h3><p className="text-sm text-gray-500">Isi Tempat Kosong (Ayat)</p></div></div><IconArrowRight className="text-orange-300 group-hover:text-orange-600" />
+                            </button>
+                            <button onClick={() => startUnit3('page4')} className="w-full p-4 border-2 border-orange-100 rounded-2xl hover:border-orange-300 hover:bg-orange-50 flex items-center justify-between group transition-all">
+                                <div className="flex items-center gap-4"><div className="bg-orange-100 p-3 rounded-xl text-orange-600"><IconPen /></div><div className="text-left"><h3 className="font-bold text-gray-800">Bahagian 4</h3><p className="text-sm text-gray-500">Eja Isyarat yang Diberikan</p></div></div><IconArrowRight className="text-orange-300 group-hover:text-orange-600" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // Unit 3 Page 1: Padan Kata dan Isyarat
+            const RenderU3Page1 = () => {
+                const currentQ = unit3Data.page1[currentIndex];
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 fade-in bg-orange-50">
+                        <div className="w-full max-w-4xl flex justify-between items-center mb-4"><button onClick={() => setU3ActivePage('menu')} className="text-gray-600 flex items-center gap-2 font-bold bg-white px-4 py-2 rounded-full shadow-sm"><IconArrowLeft /> Menu U3</button><span className="bg-white px-4 py-2 rounded-full shadow text-orange-600 font-bold">Bahagian 1: {currentIndex + 1}/{unit3Data.page1.length}</span><span className="bg-green-100 text-green-700 px-4 py-2 rounded-full shadow font-bold">Markah: {score}</span></div>
+                        <div className="bg-white px-16 py-8 rounded-[2rem] shadow-lg border-b-8 border-orange-200 mb-8 text-center">
+                            <p className="text-gray-400 text-sm font-bold uppercase mb-2">Perkataan</p>
+                            <h1 className="text-5xl font-black text-orange-600 tracking-wide">{currentQ.word}</h1>
+                        </div>
+                        <p className="text-gray-700 mb-6 font-bold text-lg">Pilih isyarat yang sepadan:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+                            {dynamicOptions.map((img, idx) => (
+                                <button key={idx} disabled={!!feedback} onClick={() => checkU3P1Answer(img)} className={`bg-white rounded-3xl p-6 shadow-md transition-all flex items-center justify-center h-56 border-4 ${feedback === 'correct' && img === currentQ.correctSign ? 'border-green-500 bg-green-50' : feedback === 'wrong' ? 'border-transparent opacity-40' : 'border-transparent hover:border-orange-300 card-hover'}`}>
+                                    <img src={img} className="h-full w-full object-contain" onError={(e) => e.target.src='https://placehold.co/300x300?text=Isyarat'} />
+                                    {feedback === 'correct' && img === currentQ.correctSign && <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center"><div className="bg-green-500 text-white p-2 rounded-full shadow-lg scale-150"><IconCheck /></div></div>}
+                                </button>
+                            ))}
+                        </div>
+                        {feedback === 'correct' && <button onClick={() => nextQuestion(unit3Data.page1)} className="mt-10 bg-green-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:bg-green-600 flex items-center gap-3 animate-bounce">Seterusnya <IconArrowRight /></button>}
+                        {feedback === 'wrong' && (
+                            <div className="mt-6 flex flex-col items-center gap-4 fade-in">
+                                <p className="text-red-500 font-bold bg-white px-6 py-3 rounded-full shadow-md text-lg">Salah. Sila cuba lagi.</p>
+                                <button onClick={() => setFeedback(null)} className="px-8 py-3 bg-red-500 text-white rounded-full font-bold shadow-lg hover:bg-red-600 flex items-center gap-2"><IconRotateCcw /> Jawab Semula</button>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            // Unit 3 Page 2: Kategorikan KGN
+            const RenderU3Page2 = () => {
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 fade-in bg-orange-50">
+                        <div className="w-full max-w-4xl flex justify-between items-center mb-6">
+                            <button onClick={() => setU3ActivePage('menu')} className="text-gray-600 flex items-center gap-2 font-bold bg-white px-4 py-2 rounded-full shadow-sm"><IconArrowLeft /> Menu U3</button>
+                            <span className="bg-white px-4 py-2 rounded-full shadow text-orange-600 font-bold">Bahagian 2: Kategori</span>
+                            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full shadow font-bold">Markah: {score}/{unit3Data.page2.length}</span>
+                        </div>
+
+                        <div className="bg-white p-6 rounded-3xl shadow-md w-full max-w-4xl text-center mb-6 border-2 border-orange-100">
+                            <h2 className="text-xl font-bold text-gray-800 mb-4">Pilih perkataan, kemudian ketik jadual yang betul.</h2>
+                            <div className="flex flex-wrap justify-center gap-3 min-h-[60px]">
+                                {u3P2Words.length === 0 && <span className="text-green-600 font-bold flex items-center gap-2"><IconCheck /> Semua perkataan telah dikategorikan!</span>}
+                                {u3P2Words.map(w => (
+                                    <button 
+                                        key={w.id} 
+                                        onClick={() => { setU3P2ActiveWord(w); setFeedback(null); }}
+                                        className={`px-6 py-3 rounded-xl font-extrabold text-lg shadow-sm transition-all border-b-4 
+                                        ${u3P2ActiveWord?.id === w.id ? 'bg-orange-500 text-white border-orange-700 active-word transform scale-110 z-10' : 'bg-white text-gray-700 border-gray-200 hover:bg-orange-50'}`}
+                                    >
+                                        {w.word}
+                                    </button>
+                                ))}
+                            </div>
+                            {feedback === 'wrong' && <p className="text-red-500 font-bold mt-4 animate-pulse">Salah kategori! Cuba jadual satu lagi.</p>}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+                            {/* Jadual Diri */}
+                            <div 
+                                onClick={() => handleU3P2Drop('diri')}
+                                className={`bg-white rounded-3xl shadow-lg border-t-8 border-blue-400 p-6 min-h-[300px] flex flex-col transition-colors cursor-pointer
+                                ${u3P2ActiveWord ? 'hover:bg-blue-50 ring-4 ring-blue-200 ring-opacity-50' : ''}`}
+                            >
+                                <h3 className="text-2xl font-black text-blue-800 text-center mb-6 uppercase tracking-wider">KGN Diri</h3>
+                                <div className="flex flex-wrap gap-2 justify-center content-start flex-1">
+                                    {u3P2Diri.map(w => <span key={w.id} className="bg-blue-100 text-blue-800 font-bold px-4 py-2 rounded-lg shadow-sm">{w.word}</span>)}
+                                </div>
+                                {u3P2ActiveWord && <div className="text-center text-blue-400 font-bold mt-4 animate-pulse">Ketik di sini untuk masukkan '{u3P2ActiveWord.word}'</div>}
+                            </div>
+                            
+                            {/* Jadual Tunjuk */}
+                            <div 
+                                onClick={() => handleU3P2Drop('tunjuk')}
+                                className={`bg-white rounded-3xl shadow-lg border-t-8 border-purple-400 p-6 min-h-[300px] flex flex-col transition-colors cursor-pointer
+                                ${u3P2ActiveWord ? 'hover:bg-purple-50 ring-4 ring-purple-200 ring-opacity-50' : ''}`}
+                            >
+                                <h3 className="text-2xl font-black text-purple-800 text-center mb-6 uppercase tracking-wider">KGN Tunjuk</h3>
+                                <div className="flex flex-wrap gap-2 justify-center content-start flex-1">
+                                    {u3P2Tunjuk.map(w => <span key={w.id} className="bg-purple-100 text-purple-800 font-bold px-4 py-2 rounded-lg shadow-sm">{w.word}</span>)}
+                                </div>
+                                {u3P2ActiveWord && <div className="text-center text-purple-400 font-bold mt-4 animate-pulse">Ketik di sini untuk masukkan '{u3P2ActiveWord.word}'</div>}
+                            </div>
+                        </div>
+
+                        {feedback === 'finished' && (
+                            <button onClick={() => setFeedback('finished_global')} className="mt-10 bg-green-500 text-white px-10 py-4 rounded-full font-bold text-xl shadow-xl hover:bg-green-600 flex items-center gap-3 animate-bounce">Aktiviti Selesai! <IconTrophy /></button>
+                        )}
+                    </div>
+                );
+            };
+
+            // Unit 3 Page 3: Isi Tempat Kosong Ayat
+            const RenderU3Page3 = () => {
+                const currentQ = unit3Data.page3[currentIndex];
+                // Fungsi untuk menukar "_____" menjadi elemen visual menarik
+                const renderSentence = () => {
+                    const parts = currentQ.sentence.split("_____");
+                    return (
+                        <h2 className="text-2xl md:text-3xl font-medium text-gray-700 leading-loose">
+                            {parts[0]}
+                            <span className={`inline-block px-8 py-2 mx-2 rounded-xl font-bold border-b-4 ${feedback === 'correct' ? 'bg-green-100 text-green-700 border-green-500' : 'bg-gray-100 text-gray-400 border-gray-300'}`}>
+                                {feedback === 'correct' ? currentQ.answer : ".........."}
+                            </span>
+                            {parts[1]}
+                        </h2>
+                    );
+                };
+
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 fade-in bg-orange-50">
+                        <div className="w-full max-w-4xl flex justify-between items-center mb-4"><button onClick={() => setU3ActivePage('menu')} className="text-gray-600 flex items-center gap-2 font-bold bg-white px-4 py-2 rounded-full shadow-sm"><IconArrowLeft /> Menu U3</button><span className="bg-white px-4 py-2 rounded-full shadow text-orange-600 font-bold">Bahagian 3: {currentIndex + 1}/{unit3Data.page3.length}</span><span className="bg-green-100 text-green-700 px-4 py-2 rounded-full shadow font-bold">Markah: {score}</span></div>
+                        
+                        <div className="bg-white p-10 md:p-14 rounded-[2rem] shadow-xl w-full max-w-4xl text-center mb-10 border-t-8 border-orange-400 mt-6">
+                            {renderSentence()}
+                        </div>
+
+                        <p className="text-gray-600 mb-6 font-bold text-lg bg-white px-6 py-2 rounded-full shadow-sm">Pilih jawapan yang betul:</p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl">
+                            {currentQ.options.map((opt, idx) => (
+                                <button key={idx} disabled={!!feedback} onClick={() => checkU3P3Answer(opt)} 
+                                    className={`p-5 rounded-2xl font-bold text-2xl shadow-md transition-all
+                                    ${feedback === 'correct' && opt === currentQ.answer ? 'bg-green-500 text-white scale-105' : 
+                                      feedback === 'wrong' && opt !== currentQ.answer ? 'bg-gray-100 text-gray-400' : 'bg-white hover:bg-orange-100 text-orange-900 border-2 border-transparent hover:border-orange-300'}`}>
+                                    {opt}
+                                </button>
+                            ))}
+                        </div>
+
+                        {feedback === 'correct' && <button onClick={() => nextQuestion(unit3Data.page3)} className="mt-12 bg-green-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:bg-green-600 flex items-center gap-3 animate-bounce">Soalan Seterusnya <IconArrowRight /></button>}
+                        {feedback === 'wrong' && (
+                            <div className="mt-8 flex flex-col items-center gap-4 fade-in">
+                                <p className="text-red-500 font-bold bg-white px-6 py-3 rounded-full shadow text-lg">Salah. Sila cari jawapan lain.</p>
+                                <button onClick={() => setFeedback(null)} className="px-8 py-3 bg-red-500 text-white rounded-full font-bold shadow-lg hover:bg-red-600 flex items-center gap-2"><IconRotateCcw /> Jawab Semula</button>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            // Unit 3 Page 4: Eja Berpandukan Isyarat
+            const RenderU3Page4 = () => {
+                const currentQ = unit3Data.page4[currentIndex];
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 fade-in bg-orange-50">
+                        <div className="w-full max-w-3xl flex justify-between items-center mb-4">
+                            <button onClick={() => setU3ActivePage('menu')} className="text-gray-600 flex items-center gap-2 font-bold bg-white px-4 py-2 rounded-full shadow-sm"><IconArrowLeft /> Menu U3</button>
+                            <span className="bg-white px-4 py-2 rounded-full shadow text-orange-600 font-bold">Bahagian 4: {currentIndex + 1}/{unit3Data.page4.length}</span>
+                            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full shadow font-bold">Markah: {score}</span>
+                        </div>
+                        
+                        <div className="bg-white p-6 rounded-3xl shadow-lg w-full max-w-2xl flex flex-col items-center mb-8 border-4 border-orange-100">
+                            <img src={currentQ.signImg} className="h-56 object-contain rounded-xl" onError={(e) => e.target.src='https://placehold.co/300x300?text=Isyarat+Hilang'} />
+                            <p className="text-gray-400 mt-4 font-bold uppercase tracking-widest text-sm">Tulis Ejaan Isyarat Ini</p>
+                        </div>
+
+                        {/* Kotak Jawapan */}
+                        <div className={`flex gap-3 mb-10 justify-center flex-wrap p-6 rounded-2xl border-4 ${feedback==='correct'?'bg-green-50 border-green-300':'bg-white border-gray-100'}`}>
+                            {selectedItems.map((l, idx) => (
+                                <button key={idx} onClick={() => handleU3P4LetterDeselect(l, idx)} 
+                                    className={`w-14 h-16 md:w-16 md:h-20 rounded-xl font-black text-3xl flex items-center justify-center border-b-4 transition-all shadow-sm
+                                    ${l ? 'bg-orange-100 text-orange-800 border-orange-300 hover:bg-red-100 hover:border-red-300 hover:text-red-700' : 'bg-gray-100 border-gray-200'}`}>
+                                    {l ? l.text : ''}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Pilihan Huruf */}
+                        <div className="flex gap-3 mb-8 justify-center flex-wrap max-w-2xl">
+                            {scrambledItems.map((l) => (
+                                <button key={l.id} onClick={() => handleU3P4LetterSelect(l)} 
+                                    className="w-14 h-16 md:w-16 md:h-20 bg-white hover:bg-orange-50 text-gray-800 rounded-xl font-black text-3xl shadow-md border-b-4 border-gray-300 hover:border-orange-400 hover:text-orange-600 active:translate-y-1 active:border-b-0 transition-all">
+                                    {l.text}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="flex flex-col items-center gap-4">
+                            {feedback === 'wrong' && <p className="text-red-500 font-bold text-lg animate-pulse">Ejaan salah. Sila klik butang Jawab Semula.</p>}
+                            <div className="flex gap-4">
+                                {feedback === 'correct' ? (
+                                    <button onClick={() => nextQuestion(unit3Data.page4)} className="bg-green-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:bg-green-600 flex items-center gap-3 animate-bounce">Seterusnya <IconArrowRight /></button>
+                                ) : (
+                                    <>
+                                        <button onClick={() => loadU3P4Question(currentIndex)} className="bg-gray-200 text-gray-700 px-6 py-3 rounded-full font-bold shadow-sm hover:bg-gray-300 flex items-center gap-2"><IconRotateCcw /> Jawab Semula</button>
+                                        <button onClick={checkU3P4Answer} disabled={selectedItems.includes(null)} className="bg-orange-600 text-white px-10 py-3 rounded-full font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-700">Semak Ejaan</button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const RenderFinished = () => (
+                <div className="min-h-screen flex flex-col items-center justify-center p-6 fade-in bg-emerald-50">
+                    <div className="bg-white p-12 rounded-[3rem] shadow-2xl max-w-md w-full text-center border-t-8 border-yellow-400">
+                        <div className="w-28 h-28 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6 text-yellow-500">
+                            <IconTrophy />
+                        </div>
+                        <h2 className="text-4xl font-black text-gray-800 mb-2">Tahniah!</h2>
+                        <p className="text-gray-500 font-medium mb-8">Anda telah berjaya menamatkan latihan ini.</p>
+                        <div className="bg-emerald-50 rounded-2xl p-6 mb-10 border border-emerald-100">
+                            <span className="text-emerald-600 uppercase text-xs font-bold tracking-widest">Markah Terkumpul</span>
+                            <div className="text-6xl font-black text-emerald-600 mt-2">{score}</div>
+                        </div>
+                        <button onClick={goHome} className="w-full py-4 bg-emerald-600 text-white rounded-full font-bold text-lg hover:bg-emerald-700 transition-colors shadow-lg">Kembali ke Menu Utama</button>
+                    </div>
+                </div>
+            );
+
+            // --- VIEW: PLACEHOLDER (UNIT 4-15) ---
+            const RenderPlaceholderUnit = () => {
+                const unitNumber = currentView.replace('placeholder_', '');
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-6 fade-in bg-gray-50">
+                        <div className="bg-white p-12 rounded-3xl shadow-xl max-w-lg w-full text-center">
+                        <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"><span className="text-gray-400"><IconBookDashed /></span></div>
+                        <h2 className="text-3xl font-black text-gray-800 mb-2">Unit {unitNumber}</h2>
+                        <p className="text-gray-500 mb-8 font-medium">Halaman ini masih kosong. Kandungan akan ditambah pada masa hadapan.</p>
+                        <button onClick={goHome} className="px-8 py-4 bg-gray-800 text-white rounded-full font-bold hover:bg-gray-900 transition-colors flex items-center justify-center gap-2 w-full shadow-lg"><span className="mr-2"><IconArrowLeft /></span> Kembali ke Menu Utama</button>
+                        </div>
+                    </div>
+                );
+            };
+
+            // --- MAIN ROUTER ---
+            if (feedback === 'finished' || feedback === 'finished_global') return <RenderFinished />;
+
+            if (currentView === 'home') return <RenderHome />;
+            
+            if (currentView === 'unit1') {
+                if (u1GameState === 'menu') return <RenderUnit1Menu />;
+                if (u1GameState === 'playing') return <RenderUnit1Game />;
+            }
+
+            if (currentView === 'unit2') {
+                if (u2ActivePage === 'menu') return <RenderUnit2Menu />;
+                if (u2ActivePage === 'page1') return <RenderU2Page1 />;
+                if (u2ActivePage === 'page2') return <RenderU2Page2 />;
+                if (u2ActivePage === 'page3') return <RenderU2Page3 />;
+            }
+
+            if (currentView === 'unit3') {
+                if (u3ActivePage === 'menu') return <RenderUnit3Menu />;
+                if (u3ActivePage === 'page1') return <RenderU3Page1 />;
+                if (u3ActivePage === 'page2') return <RenderU3Page2 />;
+                if (u3ActivePage === 'page3') return <RenderU3Page3 />;
+                if (u3ActivePage === 'page4') return <RenderU3Page4 />;
+            }
+
+            if (currentView.startsWith('placeholder_')) return <RenderPlaceholderUnit />;
+
+            return <RenderHome />; 
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
